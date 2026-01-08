@@ -1,5 +1,6 @@
 import logging
 import sys
+from urllib.parse import quote
 from rich.console import Console
 from rich.prompt import Prompt, IntPrompt
 from rich.logging import RichHandler
@@ -32,21 +33,21 @@ def main():
             "class": WallHereScraper,
             "default": "naruto",
             "idx": "1",
-            "url_gen": lambda q: f"https://wallhere.com/en/wallpapers?q={q}"
+            "url_gen": lambda q: f"https://wallhere.com/en/wallpapers?q={quote(q)}"
         },
         "2": {
             "name": "WallHaven",
             "class": WallHavenScraper,
             "default": "anime",
             "idx": "2",
-            "url_gen": lambda q: f"https://wallhaven.cc/search?q={q}"
+            "url_gen": lambda q: f"https://wallhaven.cc/search?q={quote(q)}"
         },
         "3": {
             "name": "WallpaperCat",
             "class": WallpaperCatScraper,
             "default": "naruto",
             "idx": "3",
-            "url_gen": lambda q: f"https://wallpapercat.com/{q.strip().replace(' ', '-')}-wallpapers"
+            "url_gen": lambda q: f"https://wallpapercat.com/search?term={quote(q)}"
         }
     }
 

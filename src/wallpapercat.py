@@ -42,9 +42,16 @@ class WallpaperCatScraper(BaseScraper):
             folder_name = re.sub(r'[\\/*?:"<>|]', "", query)
         else:
             parsed_url = urlparse(self.base_url)
-            # e.g., /naruto-wallpapers -> naruto
-            path_part = parsed_url.path.strip('/').split('/')[-1]
-            folder_name = path_part.replace('-wallpapers', '') or "wallpapers"
+            # Check if it's a search URL
+            if parsed_url.path == '/search':
+                from urllib.parse import parse_qs
+                qs = parse_qs(parsed_url.query)
+                # extract 'term'
+                folder_name = qs.get('term', ['search'])[0]
+            else:
+                # e.g., /naruto-wallpapers -> naruto
+                path_part = parsed_url.path.strip('/').split('/')[-1]
+                folder_name = path_part.replace('-wallpapers', '') or "wallpapers"
         
         path = os.path.join("downloads", "wallpapercat", folder_name)
         if not os.path.exists(path):
