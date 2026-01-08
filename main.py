@@ -26,52 +26,63 @@ def main():
     console.rule("[bold blue]Universal Wallpaper Scraper TUI")
 
     options = {
-        "1": "WallHere",
-        "2": "WallHaven"
+        "1": {
+            "name": "WallHere",
+            "class": WallHereScraper,
+            "default": "naruto",
+            "idx": "1",
+            "url_gen": lambda q: f"https://wallhere.com/en/wallpapers?q={q}"
+        },
+        "2": {
+            "name": "WallHaven",
+            "class": WallHavenScraper,
+            "default": "anime",
+            "idx": "2",
+            "url_gen": lambda q: f"https://wallhaven.cc/search?q={q}"
+        }
     }
 
     console.print("\n[bold]Available Scrapers:[/bold]")
-    for key, name in options.items():
-        console.print(f"[{key}] {name}")
+    for key, data in options.items():
+        console.print(f"[{key}] {data['name']}")
+    console.print("[3] All Scrapers")
 
-    choice = Prompt.ask("Select scraper", choices=list(options.keys()), default="1")
+    choice = Prompt.ask("Select scraper", choices=list(options.keys()) + ["3"], default="1")
     
-    selected_scraper = options[choice]
-    console.print(f"\n[green]Selected: {selected_scraper}[/green]")
-
-    if choice == "1":
-        # WallHere defaults
-        default_val = "naruto"
-        user_input = Prompt.ask("Enter Search URL or Query", default=default_val)
+    scrapers_to_run = []
+    
+    if choice == "3":
+        console.print(f"\n[green]Selected: All Scrapers[/green]")
+        query = Prompt.ask("Enter Search Query for ALL sites", default="anime")
+        limit = IntPrompt.ask("Max wallpapers per site", default=10)
+        
+        for key, data in options.items():
+            url = data["url_gen"](query)
+            scrapers_to_run.append(data["class"](base_url=url, max_wallpapers=limit))
+            
+    else:
+        selected = options[choice]
+        console.print(f"\n[green]Selected: {selected['name']}[/green]")
+        
+        user_input = Prompt.ask("Enter Search URL or Query", default=selected["default"])
         
         if user_input.startswith("http"):
             url = user_input
         else:
-            url = f"https://wallhere.com/en/wallpapers?q={user_input}"
+            url = selected["url_gen"](user_input)
             
         limit = IntPrompt.ask("Max wallpapers to download", default=10)
-        
-        scraper = WallHereScraper(base_url=url, max_wallpapers=limit)
-        
-    elif choice == "2":
-        # WallHaven defaults
-        default_val = "anime"
-        user_input = Prompt.ask("Enter Search URL or Query", default=default_val)
-        
-        if user_input.startswith("http"):
-            url = user_input
-        else:
-            url = f"https://wallhaven.cc/search?q={user_input}"
-            
-        limit = IntPrompt.ask("Max wallpapers to download", default=10)
-        
-        scraper = WallHavenScraper(base_url=url, max_wallpapers=limit)
+        scrapers_to_run.append(selected["class"](base_url=url, max_wallpapers=limit))
 
     console.rule("[bold yellow]Starting Scraping")
-    try:
-        scraper.run()
-    except Exception as e:
-        logger.exception("An error occurred during scraping")
+    
+    for i, scraper in enumerate(scrapers_to_run):
+        if i > 0:
+            console.print("") # spacing
+        try:
+            scraper.run()
+        except Exception as e:
+            logger.exception(f"An error occurred during scraping with {type(scraper).__name__}")
     
     console.rule("[bold blue]Done")
 
