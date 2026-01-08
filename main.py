@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.wallhere import WallHereScraper
 from src.wallhaven import WallHavenScraper
+from src.wallpapercat import WallpaperCatScraper
 
 # Configure nice logging
 logging.basicConfig(
@@ -39,19 +40,26 @@ def main():
             "default": "anime",
             "idx": "2",
             "url_gen": lambda q: f"https://wallhaven.cc/search?q={q}"
+        },
+        "3": {
+            "name": "WallpaperCat",
+            "class": WallpaperCatScraper,
+            "default": "naruto",
+            "idx": "3",
+            "url_gen": lambda q: f"https://wallpapercat.com/{q.strip().replace(' ', '-')}-wallpapers"
         }
     }
 
     console.print("\n[bold]Available Scrapers:[/bold]")
     for key, data in options.items():
         console.print(f"[{key}] {data['name']}")
-    console.print("[3] All Scrapers")
+    console.print("[4] All Scrapers")
 
-    choice = Prompt.ask("Select scraper", choices=list(options.keys()) + ["3"], default="1")
+    choice = Prompt.ask("Select scraper", choices=list(options.keys()) + ["4"], default="1")
     
     scrapers_to_run = []
     
-    if choice == "3":
+    if choice == "4":
         console.print(f"\n[green]Selected: All Scrapers[/green]")
         query = Prompt.ask("Enter Search Query for ALL sites", default="anime")
         limit = IntPrompt.ask("Max wallpapers per site", default=10)

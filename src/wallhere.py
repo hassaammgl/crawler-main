@@ -5,7 +5,6 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-from tqdm import tqdm
 import re
 from .base import BaseScraper
 
@@ -110,38 +109,6 @@ class WallHereScraper(BaseScraper):
         logger.warning(f"Could not find full-res image URL for {detail_url}")
         return None
 
-    def download_image(self, img_url, save_dir):
-        """Download image using streamed requests to save memory."""
-        try:
-            filename = os.path.basename(img_url).split('?')[0]
-            # Sanitize filename
-            filename = re.sub(r'[\\/*?:"<>|]', "_", filename)
-            save_path = os.path.join(save_dir, filename)
-
-            if os.path.exists(save_path):
-                logger.info(f"Skipping already-downloaded image: {filename}")
-                return True
-
-            response = self.session.get(img_url, stream=True, timeout=self.timeout)
-            response.raise_for_status()
-
-            total_size = int(response.headers.get('content-length', 0))
-            
-            with open(save_path, 'wb') as f, tqdm(
-                total=total_size, unit='iB', unit_scale=True, desc=filename, leave=False
-            ) as bar:
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
-                        bar.update(len(chunk))
-            
-            logger.info(f"Successfully downloaded: {filename}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to download {img_url}: {e}")
-            if os.path.exists(save_path):
-                os.remove(save_path)  # Clean up partial download
-            return False
 
     def run(self):
         """Orchestrate the scraping process."""
